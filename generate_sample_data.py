@@ -57,7 +57,7 @@ def generate_sample_data():
         first_name = name.split()[0].lower()
         
         # Generate a unique 12-digit Aadhar number for each teacher
-        aadhar = f"222233{i:04d}{i+10:04d}"
+        aadhar = f"222233{i:02d}{i+10:02d}{random.randint(10000, 99999):05d}"
         
         teacher = User(
             username=f"teacher{i+1}",
