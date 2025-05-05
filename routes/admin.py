@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import User, Center, Inventory, NutritionTip, Activity, Student, Attendance, Complaint
 from forms import UserForm, EditUserForm, CenterForm, InventoryForm, NutritionTipForm, ActivityForm, ReportForm
+from sqlalchemy import exc as sqlalchemy_exc
 from app import db
 from datetime import datetime
 from functools import wraps
@@ -87,7 +88,7 @@ def add_user():
             db.session.commit()
             flash('User added successfully!', 'success')
             return redirect(url_for('admin.users'))
-        except sqlalchemy.exc.IntegrityError as e:
+        except sqlalchemy_exc.IntegrityError as e:
             db.session.rollback()
             if 'user.aadhar_number' in str(e):
                 flash('This Aadhar number is already registered. Please use a different one.', 'danger')
