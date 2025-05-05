@@ -82,11 +82,18 @@ def add_user():
         if form.role.data == 'teacher' and form.center_id.data != 0:
             user.center_id = form.center_id.data
 
-        db.session.add(user)
-        db.session.commit()
-
-        flash('User added successfully!', 'success')
-        return redirect(url_for('admin.users'))
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash('User added successfully!', 'success')
+            return redirect(url_for('admin.users'))
+        except sqlalchemy.exc.IntegrityError as e:
+            db.session.rollback()
+            if 'user.aadhar_number' in str(e):
+                flash('This Aadhar number is already registered. Please use a different one.', 'danger')
+            else:
+                flash('A user with this username or email already exists.', 'danger')
+            return redirect(url_for('admin.add_user'))
 
     return render_template('admin/users.html', form=form, is_add=True)
 
