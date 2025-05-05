@@ -9,7 +9,14 @@ def generate_sample_data():
     """Generate sample data for the application."""
     print("Generating sample data...")
     
-    # Check if data already exists
+    # Clear existing data first to prevent duplicates
+    print("Clearing existing data...")
+    # We're not deleting users to preserve the admin account
+    # but will clear centers which will cascade to related data
+    Center.query.delete()
+    db.session.commit()
+    
+    # Check if admin user exists, create if not
     if User.query.filter_by(role='admin').first() is None:
         # Create admin user if it doesn't exist
         admin = User(
@@ -22,7 +29,7 @@ def generate_sample_data():
         db.session.add(admin)
         db.session.commit()
     
-    # Create 10 centers - one for each teacher
+    # Create exactly 10 centers - one for each teacher
     centers = []
     center_names = [f"Center {chr(65+i)}" for i in range(10)]  # Center A to Center J
     
