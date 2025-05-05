@@ -62,6 +62,13 @@
                                 <i class="fas fa-clipboard-check me-1"></i> Attendance
                             </a>
                         </li>
+                        {% if current_user.role == 'teacher' %}
+                        <li class="nav-item mx-1">
+                            <a class="nav-link rounded px-3 {% if '/teacher/search' in request.path %}active{% endif %}" href="{{ url_for('teacher.search') }}">
+                                <i class="fas fa-search me-1"></i> Search
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item mx-1">
                             <a class="nav-link rounded-pill btn btn-soft-danger px-3" href="{{ url_for('auth.logout') }}">
                                 <i class="fas fa-sign-out-alt me-1"></i> Logout
