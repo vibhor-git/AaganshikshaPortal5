@@ -22,7 +22,7 @@ def generate_sample_data():
         db.session.add(admin)
         db.session.commit()
     
-    # Create 10 centers
+    # Create 10 centers - one for each teacher
     centers = []
     center_names = [f"Center {chr(65+i)}" for i in range(10)]  # Center A to Center J
     
@@ -55,7 +55,7 @@ def generate_sample_data():
             email=f"{first_name}@aaganshiksha.org",
             role='teacher',
             aadhar_number=aadhar,
-            center_id=centers[i].id
+            center_id=centers[i].id  # Each teacher is assigned to a unique center
         )
         teacher.set_password(f"teacher{i+1}")
         db.session.add(teacher)
@@ -104,7 +104,7 @@ def generate_sample_data():
             # Create student
             student = Student(
                 name=name,
-                age=random.randint(5, 12),
+                age=random.randint(3, 6),
                 gender=gender,
                 parent_name=f"Parent of {name}",
                 parent_contact=f"98765{random.randint(10000, 99999):05d}",

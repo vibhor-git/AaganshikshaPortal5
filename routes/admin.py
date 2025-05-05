@@ -534,6 +534,7 @@ def search_suggestions_api():
             'email': user.email
         })
     
+    from flask import jsonify
     return jsonify(suggestions)
 
 @admin_bp.route('/activities/delete/<int:id>', methods=['POST'])
