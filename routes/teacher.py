@@ -22,10 +22,22 @@ def teacher_required(f):
 @login_required
 @teacher_required
 def dashboard():
-    # Count statistics for dashboard
-    students_count = Student.query.count()
-    centers_count = Center.query.count()
-    inventory_count = Inventory.query.count()
+    # Check if teacher has an assigned center
+    center_id = current_user.center_id
+    center_name = "Not Assigned"
+    
+    if center_id:
+        center = Center.query.get(center_id)
+        center_name = center.name if center else "Unknown"
+        
+        # Count statistics for dashboard (center-specific)
+        students_count = Student.query.filter_by(center_id=center_id).count()
+        inventory_count = Inventory.query.filter_by(center_id=center_id).count()
+    else:
+        students_count = 0
+        inventory_count = 0
+        
+    centers_count = 1  # Teacher only has one center
     tips_count = NutritionTip.query.count()
     activities_count = Activity.query.count()
     
@@ -40,24 +52,37 @@ def dashboard():
                            tips_count=tips_count,
                            activities_count=activities_count,
                            recent_activities=recent_activities,
-                           recent_tips=recent_tips)
+                           recent_tips=recent_tips,
+                           center_name=center_name)
 
 # Student Management
 @teacher_bp.route('/students')
 @login_required
 @teacher_required
 def students():
-    students = Student.query.all()
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to view students.', 'warning')
+        return redirect(url_for('teacher.dashboard'))
+        
+    # Only get students from the teacher's center
+    students = Student.query.filter_by(center_id=current_user.center_id).all()
     return render_template('teacher/students.html', students=students)
 
 @teacher_bp.route('/students/add', methods=['GET', 'POST'])
 @login_required
 @teacher_required
 def add_student():
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to add students.', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+        
     form = StudentForm()
     
-    # Populate center choices
-    form.center_id.choices = [(c.id, c.name) for c in Center.query.all()]
+    # Only allow teacher to add students to their own center
+    center = Center.query.get(current_user.center_id)
+    form.center_id.choices = [(center.id, center.name)]
     
     if form.validate_on_submit():
         student = Student(
@@ -83,11 +108,23 @@ def add_student():
 @login_required
 @teacher_required
 def edit_student(id):
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to edit students.', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+        
     student = Student.query.get_or_404(id)
+    
+    # Verify student belongs to teacher's center
+    if student.center_id != current_user.center_id:
+        flash('You can only edit students from your own center.', 'danger')
+        return redirect(url_for('teacher.students'))
+        
     form = StudentForm()
     
-    # Populate center choices
-    form.center_id.choices = [(c.id, c.name) for c in Center.query.all()]
+    # Only allow teacher to assign students to their own center
+    center = Center.query.get(current_user.center_id)
+    form.center_id.choices = [(center.id, center.name)]
     
     if form.validate_on_submit():
         student.name = form.name.data
@@ -117,7 +154,17 @@ def edit_student(id):
 @login_required
 @teacher_required
 def delete_student(id):
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to delete students.', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+        
     student = Student.query.get_or_404(id)
+    
+    # Verify student belongs to teacher's center
+    if student.center_id != current_user.center_id:
+        flash('You can only delete students from your own center.', 'danger')
+        return redirect(url_for('teacher.students'))
     
     # Check if student has attendance records
     if student.attendance_records:
@@ -139,14 +186,26 @@ def attendance():
     students = []
     date = datetime.utcnow().date()
     
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to mark attendance.', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+    
     if form.validate_on_submit():
         date = form.date.data
-        students = Student.query.all()
+        # Only get students from the teacher's center
+        students = Student.query.filter_by(center_id=current_user.center_id).all()
         
-        # Check if attendance is already marked for this date
-        existing_attendance = Attendance.query.filter_by(date=date).first()
-        if existing_attendance:
-            flash(f'Attendance for {date.strftime("%Y-%m-%d")} has already been marked!', 'info')
+        # Check if attendance is already marked for this date for the teacher's center
+        student_ids = [student.id for student in students]
+        if student_ids:  # Only check if there are students
+            existing_attendance = Attendance.query.filter(
+                Attendance.date == date,
+                Attendance.student_id.in_(student_ids)
+            ).first()
+            
+            if existing_attendance:
+                flash(f'Attendance for {date.strftime("%Y-%m-%d")} has already been marked!', 'info')
         
     elif request.method == 'GET':
         form.date.data = date
@@ -157,13 +216,31 @@ def attendance():
 @login_required
 @teacher_required
 def mark_attendance():
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to mark attendance.', 'danger')
+        return redirect(url_for('teacher.dashboard'))
+        
     date = datetime.strptime(request.form.get('date'), '%Y-%m-%d').date()
     student_ids = request.form.getlist('student_id')
     statuses = request.form.getlist('status')
     remarks_list = request.form.getlist('remarks')
     
-    # Delete existing attendance for this date if any
-    Attendance.query.filter_by(date=date).delete()
+    # Get all students from teacher's center
+    center_students = Student.query.filter_by(center_id=current_user.center_id).all()
+    center_student_ids = [str(student.id) for student in center_students]
+    
+    # Validate that all student_ids belong to teacher's center
+    for student_id in student_ids:
+        if student_id not in center_student_ids:
+            flash('Unauthorized attempt to mark attendance for students outside your center!', 'danger')
+            return redirect(url_for('teacher.attendance'))
+    
+    # Delete existing attendance for this date and only for students in teacher's center
+    Attendance.query.filter(
+        Attendance.date == date,
+        Attendance.student_id.in_(center_student_ids)
+    ).delete(synchronize_session=False)
     
     # Add new attendance records
     for i in range(len(student_ids)):
