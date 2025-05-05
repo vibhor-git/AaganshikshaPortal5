@@ -45,28 +45,52 @@ def generate_sample_data():
     
     db.session.commit()
     
-    # Create 10 teachers (1 per center)
-    teacher_names = [
-        "Rahul Sharma", "Priya Patel", "Amit Kumar", "Neha Singh", "Vikram Malhotra",
-        "Anjali Desai", "Suresh Verma", "Kavita Gupta", "Rajesh Reddy", "Meena Iyer"
+    # Create 10 teachers per center (100 total)
+    first_names = [
+        "Rahul", "Priya", "Amit", "Neha", "Vikram",
+        "Anjali", "Suresh", "Kavita", "Rajesh", "Meena",
+        "Anita", "Sandeep", "Pooja", "Vijay", "Deepika",
+        "Raj", "Shikha", "Ravi", "Nandini", "Prakash",
+        "Suman", "Alok", "Rani", "Arun", "Geeta",
+        "Manoj", "Sunita", "Sanjay", "Divya", "Ajay"
+    ]
+    
+    last_names = [
+        "Sharma", "Patel", "Kumar", "Singh", "Malhotra",
+        "Desai", "Verma", "Gupta", "Reddy", "Iyer",
+        "Joshi", "Chopra", "Mehta", "Agarwal", "Nair",
+        "Bhatia", "Chauhan", "Sinha", "Rao", "Kapoor"
     ]
     
     teachers = []
-    for i, name in enumerate(teacher_names):
-        # Generate a unique 12-digit Aadhar number for each teacher
-        aadhar = f"222233{i:04d}{i+10:04d}"
-        
-        first_name = name.split()[0].lower()
-        teacher = User(
-            username=f"teacher{i+1}",
-            email=f"{first_name}@aaganshiksha.org",
-            role='teacher',
-            aadhar_number=aadhar,
-            center_id=centers[i].id  # Each teacher is assigned to a unique center
-        )
-        teacher.set_password(f"teacher{i+1}")
-        db.session.add(teacher)
-        teachers.append(teacher)
+    teacher_count = 0
+    
+    # For each center, create 10 teachers
+    for center_index, center in enumerate(centers):
+        for t in range(10):  # 10 teachers per center
+            # Generate a unique name
+            first_name = first_names[teacher_count % len(first_names)]
+            last_name = last_names[teacher_count % len(last_names)]
+            full_name = f"{first_name} {last_name}"
+            
+            # Generate a unique 12-digit Aadhar number for each teacher
+            aadhar = f"222233{center_index:02d}{t:02d}{random.randint(100000, 999999):06d}"
+            
+            # Create username and email with unique identifiers
+            username = f"teacher_{center_index+1}_{t+1}"
+            email = f"{first_name.lower()}.{center_index+1}.{t+1}@aaganshiksha.org"
+            
+            teacher = User(
+                username=username,
+                email=email,
+                role='teacher',
+                aadhar_number=aadhar,
+                center_id=center.id  # Assign to the current center
+            )
+            teacher.set_password(f"teacher{center_index+1}{t+1}")
+            db.session.add(teacher)
+            teachers.append(teacher)
+            teacher_count += 1
     
     db.session.commit()
     
@@ -328,10 +352,10 @@ def generate_sample_data():
     print("Sample data generation complete!")
     print("Created:")
     print(f"- 10 centers")
-    print(f"- 10 teachers (1 per center)")
+    print(f"- 100 teachers (10 per center)")
     print(f"- 200 students (20 per center)")
-    print(f"- 20 nutrition tips (2 per teacher)")
-    print(f"- 20 activities (2 per teacher)")
+    print(f"- 20 nutrition tips (2 per first 10 teachers)")
+    print(f"- 20 activities (2 per first 10 teachers)")
     print(f"- 10 inventory requests (1 per center)")
     print(f"- {len(all_days)} days of attendance for 200 students ({len(all_days)*200} records)")
     print(f"- 3 complaints")
