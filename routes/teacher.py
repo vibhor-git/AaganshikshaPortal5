@@ -391,6 +391,90 @@ def activities():
     return render_template('teacher/activities.html', activities=activities)
 
 @teacher_bp.route('/activities/add', methods=['GET', 'POST'])
+
+# Search functionality
+@teacher_bp.route('/search')
+@login_required
+@teacher_required
+def search():
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to search students.', 'warning')
+        return redirect(url_for('teacher.dashboard'))
+    
+    query = request.args.get('query', '')
+    if not query or len(query) < 3:
+        return render_template('teacher/search.html', results=None, query=query)
+    
+    # Search for students only from teacher's center
+    students = Student.query.filter(
+        Student.center_id == current_user.center_id,
+        db.or_(
+            Student.name.ilike(f'%{query}%'),
+            Student.aadhar_number.ilike(f'%{query}%')
+        )
+    ).all()
+    
+    return render_template('teacher/search.html', results=students, query=query)
+
+@teacher_bp.route('/search/student/<int:id>')
+@login_required
+@teacher_required
+def search_student_details(id):
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        flash('You need to be assigned to a center to view student details.', 'warning')
+        return redirect(url_for('teacher.dashboard'))
+    
+    student = Student.query.get_or_404(id)
+    
+    # Verify student belongs to teacher's center
+    if student.center_id != current_user.center_id:
+        flash('You can only view details for students from your own center.', 'danger')
+        return redirect(url_for('teacher.search'))
+    
+    # Get attendance records for this student
+    attendance_records = Attendance.query.filter_by(
+
+# API routes for search suggestions
+@teacher_bp.route('/api/teacher/search-suggestions')
+@login_required
+@teacher_required
+def search_suggestions_api():
+    # Check if teacher has an assigned center
+    if not current_user.center_id:
+        return jsonify([])
+    
+    query = request.args.get('query', '')
+    if not query or len(query) < 3:
+        return jsonify([])
+    
+    suggestions = []
+    
+    # Search for students from teacher's center only (limit 8)
+    students = Student.query.filter(
+        Student.center_id == current_user.center_id,
+        db.or_(
+            Student.name.ilike(f'%{query}%'),
+            Student.aadhar_number.ilike(f'%{query}%')
+        )
+    ).limit(8).all()
+    
+    for student in students:
+        suggestions.append({
+            'id': student.id,
+            'name': student.name,
+            'type': 'student',
+            'age': student.age
+        })
+    
+    return jsonify(suggestions)
+
+        student_id=student.id
+    ).order_by(Attendance.date.desc()).all()
+    
+    return render_template('teacher/student_details.html', student=student, attendance_records=attendance_records)
+
 @login_required
 @teacher_required
 def add_activity():

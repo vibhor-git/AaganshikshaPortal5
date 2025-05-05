@@ -417,6 +417,119 @@ def edit_activity(id):
         flash('Activity updated successfully!', 'success')
         return redirect(url_for('admin.activities'))
 
+
+# Search functionality
+@admin_bp.route('/search')
+@login_required
+@admin_required
+def search():
+    query = request.args.get('query', '')
+    if not query or len(query) < 3:
+        return render_template('admin/search.html', results=None, query=query)
+    
+    # Search for students
+    students = Student.query.filter(
+        db.or_(
+            Student.name.ilike(f'%{query}%'),
+            Student.aadhar_number.ilike(f'%{query}%'),
+            Student.parent_contact.ilike(f'%{query}%')
+        )
+    ).all()
+    
+    # Search for teachers/admins
+    users = User.query.filter(
+        db.or_(
+            User.username.ilike(f'%{query}%'),
+            User.email.ilike(f'%{query}%'),
+            User.aadhar_number.ilike(f'%{query}%')
+        )
+    ).all()
+    
+    # Get additional data for display
+    results = {
+        'students': students,
+        'users': users
+    }
+    
+    return render_template('admin/search.html', results=results, query=query)
+
+@admin_bp.route('/search/user/<int:id>')
+@login_required
+@admin_required
+def search_user_details(id):
+    user = User.query.get_or_404(id)
+    
+    # Get all relevant data for this user
+    attendance_records = []
+    if user.role == 'teacher':
+        # For teachers, get attendance records they marked
+        attendance_records = Attendance.query.filter_by(marked_by=user.id).order_by(Attendance.date.desc()).all()
+    
+    # Get center details if applicable
+    center = None
+    if user.center_id:
+        center = Center.query.get(user.center_id)
+    
+    return render_template('admin/user_details.html', user=user, attendance_records=attendance_records, center=center)
+
+@admin_bp.route('/search/student/<int:id>')
+@login_required
+@admin_required
+def search_student_details(id):
+    student = Student.query.get_or_404(id)
+
+# API routes for search suggestions
+@admin_bp.route('/api/admin/search-suggestions')
+@login_required
+@admin_required
+def search_suggestions_api():
+    query = request.args.get('query', '')
+    if not query or len(query) < 3:
+        return jsonify([])
+    
+    suggestions = []
+    
+    # Search for students (limit 5)
+    students = Student.query.filter(
+        db.or_(
+            Student.name.ilike(f'%{query}%'),
+            Student.aadhar_number.ilike(f'%{query}%')
+        )
+    ).limit(5).all()
+    
+    for student in students:
+        suggestions.append({
+            'id': student.id,
+            'name': student.name,
+            'type': 'student',
+            'center': student.center.name
+        })
+    
+    # Search for users (limit 5)
+    users = User.query.filter(
+        db.or_(
+            User.username.ilike(f'%{query}%'),
+            User.email.ilike(f'%{query}%'),
+            User.aadhar_number.ilike(f'%{query}%')
+        )
+    ).limit(5).all()
+    
+    for user in users:
+        suggestions.append({
+            'id': user.id,
+            'name': user.username,
+            'type': user.role,
+            'email': user.email
+        })
+    
+    return jsonify(suggestions)
+
+    
+    # Get attendance records for this student
+    attendance_records = Attendance.query.filter_by(student_id=student.id).order_by(Attendance.date.desc()).all()
+    
+    return render_template('admin/student_details.html', student=student, attendance_records=attendance_records)
+
     elif request.method == 'GET':
         form.title.data = activity.title
         form.description.data = activity.description

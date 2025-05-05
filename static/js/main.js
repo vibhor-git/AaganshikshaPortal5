@@ -6,13 +6,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
+
     // Initialize popovers
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
         return new bootstrap.Popover(popoverTriggerEl);
     });
-    
+
     // Flash message auto-dismiss
     setTimeout(function() {
         var alerts = document.querySelectorAll('.alert');
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
             keyboard: true,
             focus: true
         });
-        
+
         // Prevent multiple backdrop issues
         modalElement.addEventListener('show.bs.modal', function() {
             const backdrop = document.querySelector('.modal-backdrop');
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
             bsAlert.close();
         });
     }, 5000);
-    
+
     // Handle date inputs
     var dateInputs = document.querySelectorAll('input[type="date"]');
     if (dateInputs.length > 0) {
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Add required asterisk to required form fields
     var requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
     requiredFields.forEach(function(field) {
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
             label.innerHTML += ' <span class="text-danger">*</span>';
         }
     });
-    
+
     // Confirm form submission for critical actions
     var dangerForms = document.querySelectorAll('form.confirm-submit');
     dangerForms.forEach(function(form) {
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     // Table row highlighting on hover
     var tableRows = document.querySelectorAll('table.table-hover tbody tr');
     tableRows.forEach(function(row) {
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.remove('table-active');
         });
     });
-    
+
     // Mobile navigation enhancements
     const navbarToggler = document.querySelector('.navbar-toggler');
     if (navbarToggler) {
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.toggle('navbar-open');
         });
     }
-    
+
     // Form validation enhancement
     const forms = document.querySelectorAll('.needs-validation');
     Array.prototype.slice.call(forms).forEach(function(form) {
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('DOMContentLoaded', function() {
         // Find all modals
         const pageModals = document.querySelectorAll('.modal, .custom-modal');
-        
+
         if (pageModals.length > 0) {
             // Create backdrop if it doesn't exist
             let modalBackdrop = document.querySelector('.modal-backdrop');
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.appendChild(modalBackdrop);
                 modalBackdrop.style.display = 'none';
             }
-            
+
             // Function to open modal
             function openModal(modal) {
                 // Hide all other modals first
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     m.style.display = 'none';
                     m.classList.remove('show');
                 });
-                
+
                 // Show this modal
 
 // Bootstrap's built-in modal handling is used instead of custom code
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.classList.add('show');
                 document.body.classList.add('modal-open');
                 modalBackdrop.style.display = 'block';
-                
+
                 // Focus on first input if exists
                 const firstInput = modal.querySelector('input, select, textarea');
                 if (firstInput) {
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }, 100);
                 }
             }
-            
+
             // Function to close modal
             function closeModal(modal) {
                 modal.style.display = 'none';
@@ -151,20 +151,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.classList.remove('modal-open');
                 modalBackdrop.style.display = 'none';
             }
-            
+
             // Set up each modal
             pageModals.forEach(function(modal) {
                 // Set up triggers
                 const modalId = modal.id;
                 const modalTriggers = document.querySelectorAll(`[data-bs-target="#${modalId}"]`);
-                
+
                 modalTriggers.forEach(trigger => {
                     trigger.addEventListener('click', function(e) {
                         e.preventDefault();
                         openModal(modal);
                     });
                 });
-                
+
                 // Set up close buttons
                 const closeButtons = modal.querySelectorAll('.close-modal, .btn-close, [data-dismiss="modal"]');
                 closeButtons.forEach(button => {
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 });
             });
-            
+
             // Close modal when clicking on backdrop
             modalBackdrop.addEventListener('click', function() {
                 const visibleModal = document.querySelector('.modal.show, .custom-modal.show');
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     closeModal(visibleModal);
                 }
             });
-            
+
             // Close modal on ESC key
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
             form.classList.add('was-validated');
         }, false);
     });
-    
+
     // Attendance form enhancement
     const statusSelects = document.querySelectorAll('select[name="status"]');
     if (statusSelects.length > 0) {
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.classList.remove('status-present', 'status-absent', 'status-late');
                 // Add new status class
                 row.classList.add('status-' + this.value);
-                
+
                 // Set default remarks based on status
                 const remarksInput = row.querySelector('input[name="remarks"]');
                 if (remarksInput) {
@@ -223,6 +223,109 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+    }
+
+    // Add any custom JavaScript here
+
+// Search auto-suggest functionality
+    const searchInput = document.getElementById('searchInput');
+
+    if (searchInput) {
+        let typingTimer;
+        const doneTypingInterval = 500; // ms
+
+        // Create suggestions container
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.classList.add('search-suggestions');
+        suggestionsContainer.style.display = 'none';
+
+        // Insert suggestions container after search input
+        searchInput.parentNode.insertBefore(suggestionsContainer, searchInput.nextSibling);
+
+        // Handle input events
+        searchInput.addEventListener('input', function() {
+            clearTimeout(typingTimer);
+
+            if (searchInput.value.length >= 3) {
+                typingTimer = setTimeout(fetchSuggestions, doneTypingInterval);
+            } else {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+
+        // Handle focus/blur events
+        searchInput.addEventListener('focus', function() {
+            if (suggestionsContainer.children.length > 0) {
+                suggestionsContainer.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput && e.target !== suggestionsContainer) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+
+        // Fetch suggestions via AJAX
+        function fetchSuggestions() {
+            const query = searchInput.value;
+            const currentPath = window.location.pathname;
+
+            // Different API endpoints based on user role
+            let suggestionsUrl;
+            if (currentPath.includes('/admin/')) {
+                suggestionsUrl = '/api/admin/search-suggestions?query=' + encodeURIComponent(query);
+            } else if (currentPath.includes('/teacher/')) {
+                suggestionsUrl = '/api/teacher/search-suggestions?query=' + encodeURIComponent(query);
+            } else {
+                return;
+            }
+
+            // Fetch suggestions
+            fetch(suggestionsUrl)
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsContainer.innerHTML = '';
+
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            const suggestionItem = document.createElement('div');
+                            suggestionItem.classList.add('suggestion-item');
+
+                            // Display icon based on type
+                            let icon = 'fa-user';
+                            if (item.type === 'student') {
+                                icon = 'fa-child';
+                            }
+
+                            suggestionItem.innerHTML = `
+                                <i class="fas ${icon} me-2"></i>
+                                <span>${item.name}</span>
+                                <small class="text-muted ms-2">${item.type}</small>
+                            `;
+
+                            suggestionItem.addEventListener('click', function() {
+                                searchInput.value = item.name;
+                                suggestionsContainer.style.display = 'none';
+                                // Submit the form
+                                const searchForm = document.getElementById('searchForm');
+                                if (searchForm) {
+                                    searchForm.dispatchEvent(new Event('submit'));
+                                }
+                            });
+
+                            suggestionsContainer.appendChild(suggestionItem);
+                        });
+
+                        suggestionsContainer.style.display = 'block';
+                    } else {
+                        suggestionsContainer.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching suggestions:', error);
+                });
+        }
     }
 });
 
@@ -241,7 +344,7 @@ function setAllStatuses(status) {
 function togglePasswordVisibility(inputId, iconId) {
     const passwordInput = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
-    
+
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
         icon.classList.remove('fa-eye');
