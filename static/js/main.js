@@ -16,6 +16,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Flash message auto-dismiss
     setTimeout(function() {
         var alerts = document.querySelectorAll('.alert');
+
+    // Initialize Bootstrap modals properly
+    var modalElements = document.querySelectorAll('.modal');
+    modalElements.forEach(function(modalElement) {
+        var modal = new bootstrap.Modal(modalElement, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+        });
+        
+        // Prevent multiple backdrop issues
+        modalElement.addEventListener('show.bs.modal', function() {
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                document.body.classList.add('modal-open');
+            }
+        });
+    });
+
         alerts.forEach(function(alert) {
             var bsAlert = new bootstrap.Alert(alert);
             bsAlert.close();
@@ -108,59 +127,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Show this modal
 
-// Custom delete user button handling
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteUserBtns = document.querySelectorAll('.delete-user-btn');
-    
-    deleteUserBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const modalId = btn.getAttribute('data-modal-id');
-            const modal = document.getElementById(modalId);
-            
-            if (modal) {
-                // Create backdrop if needed
-                let backdrop = document.querySelector('.modal-backdrop');
-                if (!backdrop) {
-                    backdrop = document.createElement('div');
-                    backdrop.className = 'modal-backdrop';
-                    document.body.appendChild(backdrop);
-                }
-                
-                // Show modal and backdrop
-                modal.style.display = 'block';
-                backdrop.style.display = 'block';
-                document.body.classList.add('modal-open');
-                
-                // Set up close buttons
-                const closeButtons = modal.querySelectorAll('.close-modal, .btn-close');
-                closeButtons.forEach(closeBtn => {
-                    closeBtn.addEventListener('click', function() {
-                        modal.style.display = 'none';
-                        backdrop.style.display = 'none';
-                        document.body.classList.remove('modal-open');
-                    });
-                });
-                
-                // Close on backdrop click
-                backdrop.addEventListener('click', function() {
-                    modal.style.display = 'none';
-                    backdrop.style.display = 'none';
-                    document.body.classList.remove('modal-open');
-                });
-                
-                // Close on ESC key
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape') {
-                        modal.style.display = 'none';
-                        backdrop.style.display = 'none';
-                        document.body.classList.remove('modal-open');
-                    }
-                });
-            }
-        });
-    });
-});
+// Bootstrap's built-in modal handling is used instead of custom code
+// This ensures smoother modal transitions without flickering
 
                 modal.style.display = 'block';
                 modal.classList.add('show');

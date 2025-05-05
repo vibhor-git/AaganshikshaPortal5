@@ -131,18 +131,17 @@ a {
     margin: 1.75rem auto;
     pointer-events: auto;
     max-width: 500px;
-    animation: modalFadeIn 0.3s ease-out;
+    transition: transform 0.2s ease-out;
 }
 
-@keyframes modalFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+/* Prevent modal flickering with smoother animations */
+.modal.fade .modal-dialog {
+    transform: translate(0, -50px);
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: none;
 }
 
 .modal-dialog-centered {
