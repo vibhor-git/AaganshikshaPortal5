@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Aaganshiksha - Login{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row g-0 shadow-lg rounded-4 overflow-hidden animate__animated animate__fadeIn">
+                <div class="col-lg-5 d-none d-lg-block">
+                    <div class="bg-primary h-100 d-flex flex-column justify-content-center align-items-center p-5 text-white">
+                        <div class="text-center">
+                            <i class="fas fa-child fa-4x mb-4"></i>
+                            <h2 class="fw-bold mb-4">Welcome Back!</h2>
+                            <p class="mb-5">Log in to access the Aaganshiksha administration portal and manage Aganwadi center operations.</p>
+                            <div class="d-flex justify-content-center">
+                                <div class="bg-white bg-opacity-10 p-3 rounded-circle mx-2">
+                                    <i class="fas fa-clipboard-check text-white"></i>
+                                </div>
+                                <div class="bg-white bg-opacity-10 p-3 rounded-circle mx-2">
+                                    <i class="fas fa-apple-alt text-white"></i>
+                                </div>
+                                <div class="bg-white bg-opacity-10 p-3 rounded-circle mx-2">
+                                    <i class="fas fa-puzzle-piece text-white"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7 bg-white p-5">
+                    <div class="mb-4">
+                        <h3 class="fw-bold text-center mb-2">Login to Your Account</h3>
+                        <p class="text-muted text-center">Enter your credentials to access the dashboard</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('auth.login') }}" class="animate__animated animate__fadeInUp">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-user text-muted"></i></span>
+                                {{ form.username(class="form-control border-start-0 shadow-none ps-0", placeholder="Enter your username") }}
+                            </div>
+                            {% if form.username.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.username.errors %}
+                                        <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="password" class="form-label mb-0">Password</label>
+                                <a href="#" class="text-primary small text-decoration-none">Forgot password?</a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-muted"></i></span>
+                                {{ form.password(class="form-control border-start-0 shadow-none ps-0", placeholder="Enter your password") }}
+                                <button class="btn btn-light border" type="button" onclick="togglePasswordVisibility('password', 'passwordToggleIcon')">
+                                    <i id="passwordToggleIcon" class="fas fa-eye text-muted"></i>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.password.errors %}
+                                        <small><i class="fas fa-exclamation-circle me-1"></i>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.remember(class="form-check-input") }}
+                                <label class="form-check-label" for="remember">Remember me</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mb-4">
+                            {{ form.submit(class="btn btn-primary py-3 rounded-pill") }}
+                        </div>
+                        
+                        <div class="text-center">
+                            <p class="text-muted small">
+                                Note: This login is for administrators and teachers only. Parents and visitors can access public information without logging in.
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Demo Credentials -->
+            <div class="card border-0 shadow rounded-4 mt-5 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="text-center fw-bold">Demo Credentials</h5>
+                    <p class="text-center text-muted mb-0">For demonstration purposes, you can use the following credentials</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-soft-primary rounded-4 hover-lift">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="p-2 rounded-circle bg-primary text-white me-3">
+                                            <i class="fas fa-user-shield"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-0">Admin Login</h5>
+                                    </div>
+                                    <div class="mb-1">
+                                        <div class="d-flex">
+                                            <div class="text-muted me-2">Username:</div>
+                                            <div class="fw-medium">admin</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex">
+                                            <div class="text-muted me-2">Password:</div>
+                                            <div class="fw-medium">admin123</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-0 bg-soft-info rounded-4 hover-lift">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="p-2 rounded-circle bg-info text-white me-3">
+                                            <i class="fas fa-chalkboard-teacher"></i>
+                                        </div>
+                                        <h5 class="fw-bold mb-0">Teacher Login</h5>
+                                    </div>
+                                    <div class="mb-1">
+                                        <div class="d-flex">
+                                            <div class="text-muted me-2">Username:</div>
+                                            <div class="fw-medium">teacher</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="d-flex">
+                                            <div class="text-muted me-2">Password:</div>
+                                            <div class="fw-medium">teacher123</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('auth.initialize') }}" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-redo-alt me-2"></i> Initialize Demo Accounts
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function togglePasswordVisibility(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add hover animations to cards
+        document.querySelectorAll('.hover-lift').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px)';
+                this.style.boxShadow = '0 15px 30px rgba(0,0,0,0.1)';
+                this.style.transition = 'all 0.3s ease';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 5px 15px rgba(0,0,0,0.05)';
+                this.style.transition = 'all 0.3s ease';
+            });
+        });
+    });
+</script>
+{% endblock %}

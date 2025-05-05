@@ -1,0 +1,279 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Complaints Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Complaints Management</h1>
+    </div>
+
+    {% include 'admin/_messages.html' %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">All Complaints</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for complaint in complaints %}
+                        <tr class="{% if complaint.status == 'pending' %}table-warning{% elif complaint.status == 'in-progress' %}table-info{% elif complaint.status == 'resolved' %}table-success{% endif %}">
+                            <td>{{ complaint.id }}</td>
+                            <td>{{ complaint.name }}</td>
+                            <td>{{ complaint.email }}</td>
+                            <td>{{ complaint.subject }}</td>
+                            <td>
+                                <span class="badge {% if complaint.status == 'pending' %}bg-warning{% elif complaint.status == 'in-progress' %}bg-info{% elif complaint.status == 'resolved' %}bg-success{% endif %}">
+                                    {{ complaint.status|capitalize }}
+                                </span>
+                            </td>
+                            <td>{{ complaint.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary view-complaint" data-id="{{ complaint.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button type="button" class="btn btn-sm btn-success update-status" data-id="{{ complaint.id }}">
+                                    <i class="fas fa-edit"></i> Update Status
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Complaint Modal -->
+<div class="modal" id="viewComplaintModal" tabindex="-1" role="dialog" aria-labelledby="viewComplaintModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewComplaintModalLabel">Complaint Details</h5>
+                <button type="button" class="btn-close close-modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 class="fw-bold">Subject:</h6>
+                    <p id="view-subject"></p>
+                </div>
+                <div class="mb-3">
+                    <h6 class="fw-bold">Message:</h6>
+                    <p id="view-message"></p>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Name:</h6>
+                        <p id="view-name"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Email:</h6>
+                        <p id="view-email"></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Status:</h6>
+                        <p id="view-status"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Date Submitted:</h6>
+                        <p id="view-date"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary close-modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal" id="updateStatusModal" tabindex="-1" role="dialog" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Complaint Status</h5>
+                <button type="button" class="btn-close close-modal" aria-label="Close"></button>
+            </div>
+            <form id="updateStatusForm" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-modal">Close</button>
+                    <button type="submit" class="btn btn-success">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Complaint data (populated from server)
+        const complaints = [
+            {% for complaint in complaints %}
+            {
+                id: {{ complaint.id }},
+                name: "{{ complaint.name }}",
+                email: "{{ complaint.email }}",
+                subject: "{{ complaint.subject }}",
+                message: "{{ complaint.message|replace('\n', ' ')|replace('"', '\\"') }}",
+                status: "{{ complaint.status }}",
+                date: "{{ complaint.created_at.strftime('%Y-%m-%d %H:%M') }}"
+            },
+            {% endfor %}
+        ];
+        
+        // Get DOM elements
+        const viewModal = document.getElementById('viewComplaintModal');
+        const updateModal = document.getElementById('updateStatusModal');
+        const updateForm = document.getElementById('updateStatusForm');
+        const closeButtons = document.querySelectorAll('.close-modal');
+        const viewButtons = document.querySelectorAll('.view-complaint');
+        const updateButtons = document.querySelectorAll('.update-status');
+        
+        // Modal backdrop 
+        let modalBackdrop = null;
+        
+        // Helper function to create backdrop
+        function createBackdrop() {
+            modalBackdrop = document.createElement('div');
+            modalBackdrop.className = 'modal-backdrop';
+            document.body.appendChild(modalBackdrop);
+        }
+        
+        // Helper function to remove backdrop
+        function removeBackdrop() {
+            if (modalBackdrop) {
+                document.body.removeChild(modalBackdrop);
+                modalBackdrop = null;
+            }
+        }
+        
+        // Function to show modal
+        function showModal(modal, complaintId = null) {
+            // If opening update modal, set the form action
+            if (modal === updateModal && complaintId) {
+                updateForm.action = "{{ url_for('admin.update_complaint_status', id=0) }}".replace('0', complaintId);
+                
+                // Find the complaint and set the current status
+                const complaint = complaints.find(c => c.id === complaintId);
+                if (complaint) {
+                    document.getElementById('status').value = complaint.status;
+                }
+            }
+            
+            // If opening view modal, populate the data
+            if (modal === viewModal && complaintId) {
+                const complaint = complaints.find(c => c.id === complaintId);
+                if (complaint) {
+                    document.getElementById('view-subject').textContent = complaint.subject;
+                    document.getElementById('view-message').textContent = complaint.message;
+                    document.getElementById('view-name').textContent = complaint.name;
+                    document.getElementById('view-email').textContent = complaint.email;
+                    document.getElementById('view-status').textContent = complaint.status.charAt(0).toUpperCase() + complaint.status.slice(1);
+                    document.getElementById('view-date').textContent = complaint.date;
+                }
+            }
+            
+            // Show modal and backdrop
+            modal.style.display = 'block';
+            createBackdrop();
+            document.body.classList.add('modal-open');
+            
+            // Add show class after a small delay (needed for transitions)
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+        
+        // Function to hide modal
+        function hideModal(modal) {
+            modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            removeBackdrop();
+            
+            // Hide modal after transition
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 150);
+        }
+        
+        // Handle close buttons
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (this.closest('#viewComplaintModal')) {
+                    hideModal(viewModal);
+                } else if (this.closest('#updateStatusModal')) {
+                    hideModal(updateModal);
+                }
+            });
+        });
+        
+        // Handle view buttons
+        viewButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const complaintId = parseInt(this.getAttribute('data-id'));
+                showModal(viewModal, complaintId);
+            });
+        });
+        
+        // Handle update buttons
+        updateButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const complaintId = parseInt(this.getAttribute('data-id'));
+                showModal(updateModal, complaintId);
+            });
+        });
+        
+        // Close modal on backdrop click
+        document.addEventListener('click', function(event) {
+            if (event.target === modalBackdrop) {
+                if (viewModal.classList.contains('show')) {
+                    hideModal(viewModal);
+                } else if (updateModal.classList.contains('show')) {
+                    hideModal(updateModal);
+                }
+            }
+        });
+        
+        // Close modals on escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (viewModal.classList.contains('show')) {
+                    hideModal(viewModal);
+                } else if (updateModal.classList.contains('show')) {
+                    hideModal(updateModal);
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
