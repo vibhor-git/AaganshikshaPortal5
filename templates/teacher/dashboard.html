@@ -4,6 +4,41 @@
 
 {% block head %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css">
+<style>
+    .search-container {
+        position: relative;
+    }
+
+    .search-input {
+        padding-right: 30px; /* Space for the dropdown arrow */
+    }
+
+    #searchSuggestions {
+        position: absolute;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-top: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    #searchSuggestions ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    #searchSuggestions li {
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+
+    #searchSuggestions li:hover {
+        background-color: #f0f0f0;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -12,6 +47,17 @@
         <div class="col">
             <h1 class="h3 mb-0 text-gray-800">Teacher Dashboard</h1>
             <p class="mb-0">Welcome, {{ current_user.username }}!</p>
+        </div>
+    </div>
+
+    <!-- Search box -->
+    <div class="mb-4">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="form-control search-input" placeholder="Search students by name or Aadhar number...">
+            <div id="searchSuggestions"></div>
+        </div>
+        <div class="text-end mt-2">
+            <a href="{{ url_for('teacher.search') }}" class="btn btn-sm btn-outline-primary">Advanced Search</a>
         </div>
     </div>
 
@@ -179,13 +225,7 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="col-md-12 mb-3">
-                            <div class="d-grid">
-                                <a href="{{ url_for('teacher.search') }}" class="btn btn-outline-success">
-                                    <i class="fas fa-search me-2"></i> Search Students
-                                </a>
-                            </div>
-                        </div>
+                        
                     </div>
                 </div>
             </div>
@@ -280,4 +320,38 @@
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const searchSuggestions = document.getElementById('searchSuggestions');
+
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value;
+        if (query.length > 2) {
+            fetch(`/api/teacher/search-suggestions?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    searchSuggestions.innerHTML = '';
+                    const ul = document.createElement('ul');
+                    data.forEach(student => {
+                        const li = document.createElement('li');
+                        li.textContent = `${student.name} (${student.aadhar_number})`;
+                        li.addEventListener('click', () => {
+                            searchInput.value = student.name;
+                            searchSuggestions.innerHTML = '';
+                        });
+                        ul.appendChild(li);
+                    });
+                    searchSuggestions.appendChild(ul);
+                });
+        } else {
+            searchSuggestions.innerHTML = '';
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!searchInput.contains(event.target)) {
+            searchSuggestions.innerHTML = '';
+        }
+    });
+</script>
 {% endblock %}

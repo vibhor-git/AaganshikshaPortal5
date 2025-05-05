@@ -229,103 +229,92 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Search auto-suggest functionality
     const searchInput = document.getElementById('searchInput');
+    const searchSuggestions = document.getElementById('searchSuggestions');
 
     if (searchInput) {
-        let typingTimer;
-        const doneTypingInterval = 500; // ms
+        let debounceTimer;
 
-        // Create suggestions container
-        const suggestionsContainer = document.createElement('div');
-        suggestionsContainer.classList.add('search-suggestions');
-        suggestionsContainer.style.display = 'none';
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(debounceTimer);
+            const query = e.target.value.trim();
 
-        // Insert suggestions container after search input
-        searchInput.parentNode.insertBefore(suggestionsContainer, searchInput.nextSibling);
-
-        // Handle input events
-        searchInput.addEventListener('input', function() {
-            clearTimeout(typingTimer);
-
-            if (searchInput.value.length >= 3) {
-                typingTimer = setTimeout(fetchSuggestions, doneTypingInterval);
-            } else {
-                suggestionsContainer.style.display = 'none';
-            }
-        });
-
-        // Handle focus/blur events
-        searchInput.addEventListener('focus', function() {
-            if (suggestionsContainer.children.length > 0) {
-                suggestionsContainer.style.display = 'block';
-            }
-        });
-
-        document.addEventListener('click', function(e) {
-            if (e.target !== searchInput && e.target !== suggestionsContainer) {
-                suggestionsContainer.style.display = 'none';
-            }
-        });
-
-        // Fetch suggestions via AJAX
-        function fetchSuggestions() {
-            const query = searchInput.value;
-            const currentPath = window.location.pathname;
-
-            // Different API endpoints based on user role
-            let suggestionsUrl;
-            if (currentPath.includes('/admin/')) {
-                suggestionsUrl = '/api/admin/search-suggestions?query=' + encodeURIComponent(query);
-            } else if (currentPath.includes('/teacher/')) {
-                suggestionsUrl = '/api/teacher/search-suggestions?query=' + encodeURIComponent(query);
-            } else {
+            // Clear suggestions if query is too short
+            if (query.length < 2) {
+                if (searchSuggestions) {
+                    searchSuggestions.innerHTML = '';
+                    searchSuggestions.style.display = 'none';
+                }
                 return;
             }
 
-            // Fetch suggestions
-            fetch(suggestionsUrl)
-                .then(response => response.json())
-                .then(data => {
-                    suggestionsContainer.innerHTML = '';
+            // Debounce the API call to avoid too many requests
+            debounceTimer = setTimeout(() => {
+                // Check if we're in the admin or teacher section
+                const isAdmin = window.location.pathname.includes('/admin');
+                const endpoint = isAdmin ? '/api/admin/search-suggestions' : '/api/teacher/search-suggestions';
 
-                    if (data.length > 0) {
-                        data.forEach(item => {
-                            const suggestionItem = document.createElement('div');
-                            suggestionItem.classList.add('suggestion-item');
+                fetch(`${endpoint}?query=${encodeURIComponent(query)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Search API error');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (searchSuggestions) {
+                            // Clear previous suggestions
+                            searchSuggestions.innerHTML = '';
 
-                            // Display icon based on type
-                            let icon = 'fa-user';
-                            if (item.type === 'student') {
-                                icon = 'fa-child';
+                            if (data.length > 0) {
+                                // Create and add suggestion items
+                                data.forEach(item => {
+                                    const div = document.createElement('div');
+                                    div.className = 'search-suggestion-item';
+
+                                    let html = `<strong>${item.name}</strong>`;
+                                    if (item.type) {
+                                        html += ` <span class="badge bg-secondary">${item.type}</span>`;
+                                    }
+                                    if (item.aadhar) {
+                                        html += ` <small>${item.aadhar}</small>`;
+                                    }
+
+                                    div.innerHTML = html;
+
+                                    // Add click event
+                                    div.addEventListener('click', () => {
+                                        const urlPrefix = isAdmin ? '/admin' : '/teacher';
+                                        const urlSuffix = item.type === 'teacher' ? 'user' : 'student';
+                                        window.location.href = `${urlPrefix}/search/${urlSuffix}/${item.id}`;
+                                    });
+
+                                    searchSuggestions.appendChild(div);
+                                });
+
+                                // Show suggestions
+                                searchSuggestions.style.display = 'block';
+                            } else {
+                                // No results
+                                const div = document.createElement('div');
+                                div.className = 'search-suggestion-item no-results';
+                                div.textContent = 'No results found';
+                                searchSuggestions.appendChild(div);
+                                searchSuggestions.style.display = 'block';
                             }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                    });
+            }, 300); // 300ms debounce
+        });
 
-                            suggestionItem.innerHTML = `
-                                <i class="fas ${icon} me-2"></i>
-                                <span>${item.name}</span>
-                                <small class="text-muted ms-2">${item.type}</small>
-                            `;
-
-                            suggestionItem.addEventListener('click', function() {
-                                searchInput.value = item.name;
-                                suggestionsContainer.style.display = 'none';
-                                // Submit the form
-                                const searchForm = document.getElementById('searchForm');
-                                if (searchForm) {
-                                    searchForm.dispatchEvent(new Event('submit'));
-                                }
-                            });
-
-                            suggestionsContainer.appendChild(suggestionItem);
-                        });
-
-                        suggestionsContainer.style.display = 'block';
-                    } else {
-                        suggestionsContainer.style.display = 'none';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching suggestions:', error);
-                });
-        }
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (searchSuggestions && !searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+                searchSuggestions.style.display = 'none';
+            }
+        });
     }
 });
 
