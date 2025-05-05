@@ -25,6 +25,17 @@
         </div>
     </div>
 
+    <!-- Search box -->
+    <div class="mb-4">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="form-control search-input" placeholder="Search users or students by name, email or Aadhar number...">
+            <div id="searchSuggestions"></div>
+        </div>
+        <div class="text-end mt-2">
+            <a href="{{ url_for('admin.search') }}" class="btn btn-sm btn-outline-primary">Advanced Search</a>
+        </div>
+    </div>
+
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
@@ -267,4 +278,53 @@
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const searchSuggestions = document.getElementById('searchSuggestions');
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value;
+            if (query.length > 2) {
+                fetch(`/api/admin/search-suggestions?query=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        searchSuggestions.innerHTML = '';
+                        if (data.length > 0) {
+                            const ul = document.createElement('ul');
+                            data.forEach(item => {
+                                const li = document.createElement('li');
+                                let detailText = '';
+                                let linkUrl = '';
+
+                                if (item.type === 'student') {
+                                    detailText = `${item.name} (Student - ${item.center})`;
+                                    linkUrl = `/admin/search/student/${item.id}`;
+                                } else {
+                                    detailText = `${item.name} (${item.type}) - ${item.email}`;
+                                    linkUrl = `/admin/search/user/${item.id}`;
+                                }
+
+                                li.textContent = detailText;
+                                li.addEventListener('click', () => {
+                                    window.location.href = linkUrl;
+                                });
+                                ul.appendChild(li);
+                            });
+                            searchSuggestions.appendChild(ul);
+                        }
+                    });
+            } else {
+                searchSuggestions.innerHTML = '';
+            }
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!searchInput.contains(event.target) && !searchSuggestions.contains(event.target)) {
+                searchSuggestions.innerHTML = '';
+            }
+        });
+    });
+</script>
 {% endblock %}
