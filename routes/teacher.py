@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from models import Student, Center, Inventory, NutritionTip, Activity, Attendance
 from forms import StudentForm, InventoryForm, NutritionTipForm, ActivityForm, AttendanceForm, StudentAttendanceForm
@@ -436,6 +436,11 @@ def search_student_details(id):
     # Get attendance records for this student
     attendance_records = Attendance.query.filter_by(
 
+student_id=student.id
+    ).order_by(Attendance.date.desc()).all()
+    
+    return render_template('teacher/student_details.html', student=student, attendance_records=attendance_records)
+
 # API routes for search suggestions
 @teacher_bp.route('/api/teacher/search-suggestions')
 @login_required
@@ -469,11 +474,6 @@ def search_suggestions_api():
         })
     
     return jsonify(suggestions)
-
-        student_id=student.id
-    ).order_by(Attendance.date.desc()).all()
-    
-    return render_template('teacher/student_details.html', student=student, attendance_records=attendance_records)
 
 @login_required
 @teacher_required
