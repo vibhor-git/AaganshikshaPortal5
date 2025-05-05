@@ -416,6 +416,13 @@ def edit_activity(id):
         db.session.commit()
         flash('Activity updated successfully!', 'success')
         return redirect(url_for('admin.activities'))
+    elif request.method == 'GET':
+        form.title.data = activity.title
+        form.description.data = activity.description
+        form.date.data = activity.date
+        form.is_active.data = activity.is_active
+
+    return render_template('admin/activities.html', form=form, activity=activity, is_edit=True)
 
 
 # Search functionality
@@ -477,6 +484,11 @@ def search_user_details(id):
 @admin_required
 def search_student_details(id):
     student = Student.query.get_or_404(id)
+    
+    # Get attendance records for this student
+    attendance_records = Attendance.query.filter_by(student_id=student.id).order_by(Attendance.date.desc()).all()
+    
+    return render_template('admin/student_details.html', student=student, attendance_records=attendance_records)
 
 # API routes for search suggestions
 @admin_bp.route('/api/admin/search-suggestions')
@@ -523,20 +535,6 @@ def search_suggestions_api():
         })
     
     return jsonify(suggestions)
-
-    
-    # Get attendance records for this student
-    attendance_records = Attendance.query.filter_by(student_id=student.id).order_by(Attendance.date.desc()).all()
-    
-    return render_template('admin/student_details.html', student=student, attendance_records=attendance_records)
-
-    elif request.method == 'GET':
-        form.title.data = activity.title
-        form.description.data = activity.description
-        form.date.data = activity.date
-        form.is_active.data = activity.is_active
-
-    return render_template('admin/activities.html', form=form, activity=activity, is_edit=True)
 
 @admin_bp.route('/activities/delete/<int:id>', methods=['POST'])
 @login_required
