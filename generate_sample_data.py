@@ -108,7 +108,7 @@ def generate_sample_data():
             
             # Generate a unique 12-digit Aadhar number for each student
             center_index = centers.index(center)
-            aadhar = f"3333{center_index:02d}{i:02d}{random.randint(100000, 999999):06d}"
+            aadhar = f"3333{center_index:02d}{i:02d}{random.randint(100000, 999999):06d}"[:12]
             
             # Create student
             student = Student(
